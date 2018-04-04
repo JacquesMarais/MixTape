@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>MixTape</title>
+
+        <script type="text/javascript" src="https://cdn.plyr.io/3.1.0/plyr.js"></script>
+        <link rel="stylesheet" href="https://cdn.plyr.io/3.1.0/plyr.css" />
+        <link rel="stylesheet" href="main.css" />
+    </head>
+    <body>
+        <div id="overlay"></div>
+        <div class="plyr--audio" id="player">
+            <iframe src="https://www.youtube.com/embed/eSjSozKL_EA" id="mainframe"></iframe>
+        </div>
+        <input type="text" id="vid" placeholder="Video URL" />
+        <input type="submit" value="Go" id="vidgo"/>
+
+        <div id="desc"><br/><br/>Paste/type the link to the YouTube video in the "Video URL" input box. Paste the correctly formatted playlist into this page by pressing Ctrl + V. Website design coming soon. Example of a correctly formatted playlist:<br/><br/>0:00 idealism - dont say a word<br/>
+        2:22 through & through - mom.<br/>
+        4:52 Aso - Lucid Dreams<br/>
+        7:37 fujitsu - too far gone<br/>
+        9:21 Arbour - elusive<br/><br/></br></div>
+
+        <div id="controls">
+            <button id="playpause">Play/Pause</button>
+            <button id="next">Skip</button>
+        </div>
+
+        <table id="tracklisttable">
+            <tbody id="tracklist"></tbody>
+        </table>
+        <script>
+            var loadedlist = false;
+
+            const player = new Plyr('#player', {
+                autoplay: false,
+                clickToPlay: false,
+                hideControls: false
+            });
+
+            deftitle = "MixTape";
+
+            player.on('ready', function(){
+
+                sl("#overlay").style.display = "none";
+
+                function changedata(){
+                    document.title = deftitle + " » " + player.embed.getVideoData().title;
+                };
+
+                // Quick element selector
+                function sl(s) {
+                    return document.querySelector(s);
+                }
+
+                // Get query string value (https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript)
+                function par(name, url) {
+                    if (!url) url = window.location.href;
+                    name = name.replace(/[\[\]]/g, "\\$&");
+                    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                        results = regex.exec(url);
+                    if (!results) return null;
+                    if (!results[2]) return '';
+                    return decodeURIComponent(results[2].replace(/\+/g, " "));
+                }
+
+                // Get source from yt vid url
+                function getsrc(u) {
+                    if(/youtube\.com/.test(u)) return par("v", u);
+                    else if(/youtu\.be/.test(u)) return u.replace(/(.*?)youtu.be\/+/, '').replace(/\?.*/, '');
+                }
+
+                sl("#vidgo").addEventListener("click", function(){
+                    player.source = {
+                        type: 'video',
+                        sources: [
+                            {
+                                src: getsrc(sl("#vid").value),
+                                provider: 'youtube',
+                            },
+                        ],
+                    };
+                    changedata();
+                    loadedlist = false;
+                    player.pause();
+                });
+
+                var play = true;
+
+                sl("#playpause").addEventListener("click", function(){
+                    if(!loadedlist) return;
+                    if(!play) player.play();
+                    else player.pause();
+
+                    play = play ? false: true;
+                });
+
+                var times = [],
+                    tracks = [];
+
+                document.body.addEventListener("paste", function(e){
+                    sl("#tracklist").innerHTML = "";
+                    times = [];
+                    tracks = [];
+
+                    player.play();
+
+                    var data = e.clipboardData.getData('Text');
+                    if(/youtu\.?be/.test(data)) return;
+
+                    var vals = data.split(/(?=[0-9][0-9]:)/g),
+                        val0 = vals[0].split(/(?=[0-9]:)/g);
+                    vals.shift();
+                    vals = val0.concat(vals);
+                    var item = 0;
+                    vals.forEach(function(s, i){
+                        // s = string, i = position
+                        if(!/\:/.test(s)) return;
+
+                        var timeval = s.match(/([0-9]+):([0-9]+)/)[0],
+                            time = parseInt(timeval.split(':')[0] * 60) + (parseInt(timeval.split(':')[1])),
+                            track = s.replace(timeval + " ", '').replace('\n', '');
+
+                        console.log(time, track);
+
+                        sl("#tracklist").insertAdjacentHTML("beforeEnd", "<tr id='track" + item + "'><td>" + timeval + "</td><td>" + track + "</td></tr>");
+
+                        sl("#track0").className = "currenttrack";
+
+                        loadedlist = true;
+
+                        times.push(time);
+                        tracks.push(track);
+                        item++;
+                    });
+                    document.querySelectorAll("tr").forEach(function(e){
+                            e.addEventListener("click", function(){
+                            var selectedtrack = this.id.replace("track", '');
+                            player.currentTime = times[selectedtrack];
+                            currenttrack = selectedtrack;
+                            console.log(times[selectedtrack]);
+                        });
+                    });
+                });
+
+                var currenttrack = 0;
+
+                player.on('timeupdate', function(){
+                    if(player.currentTime == times[currenttrack + 1]) currenttrack++;
+                    if(!sl(".currenttrack")) return;
+                    sl(".currenttrack").className = "";
+                    sl("#track" + currenttrack).className = "currenttrack";
+                });
+
+                sl("#next").addEventListener("click", function(){
+                    player.currentTime = times[currenttrack + 1];
+                    currenttrack++;
+                });
+            });
+        </script>
+    </body>
+</html>
