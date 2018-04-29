@@ -15,26 +15,22 @@
         <link rel="stylesheet" href="main.css" />
     </head>
     <body>
+        <div id="tools">
+            <span id="colorchange"><i class="fas fa-exchange-alt"></i></span>
+        </div>
         <div id="overlay"></div>
         <div id="wrapper">
             <div id="thumb"><div class="plyr--audio" id="player">
-                <iframe src="https://www.youtube.com/embed/eSjSozKL_EA" id="mainframe"></iframe>
+                <iframe src="https://www.youtube.com/embed/amRT92Kws0o" id="mainframe"></iframe>
             </div></div>
 
-            <div id="controlwrapper"><div id="controls" class="phidden">
-                <button id="prev"><i class="fas fa-step-backward fa-1x"></i>
-                </button><button id="playpause"><i class="fas fa-play fa-1x"></i>
-                </button><button id="next"><i class="fas fa-step-forward fa-1x"></i></button>
-            </div></div>
-
-            <input type="text" id="vid" placeholder="Video URL" hidden />
-            <input type="submit" value="Go" id="vidgo" hidden/>
-
-            <div id="desc" hidden><br/><br/>Paste/type the link to the YouTube video in the "Video URL" input box and press Go. Paste the correctly formatted playlist into this page by pressing Ctrl + V. Website design coming soon. Example of a correctly formatted playlist:<br/><br/>0:00 idealism - dont say a word<br/>
-            2:22 through & through - mom.<br/>
-            4:52 Aso - Lucid Dreams<br/>
-            7:37 fujitsu - too far gone<br/>
-            9:21 Arbour - elusive<br/><br/></br></div>
+            <div id="two" hidden>
+                <div id="controlwrapper"><div id="controls">
+                    <button id="prev"><i class="fas fa-step-backward fa-1x"></i>
+                    </button><button id="playpause"><i id="playicon" hidden class="fas fa-play fa-1x"></i><i id="pauseicon" class="fas fa-pause fa-1x"></i><i id="loadicon" hidden class="fa fa-spinner fa-pulse fa-spin"></i>
+                    </button><button id="next"><i class="fas fa-step-forward fa-1x"></i></button>
+                </div>
+            </div>
 
             <div id="trackwrapper" data-simplebar data-simplebar-auto-hide="false">
                 <table id="tracklisttable">
@@ -55,14 +51,29 @@
                         </td></tr>
                     </tbody>
                 </table>
-            </div>
+            </div></div>
+            <div id="one"><div id="inputwrapper"><div id="inputs"><input type="text" id="vid" placeholder="Video URL"/>
+            <button id="vidgo"><i class="fas fa-play fa-1x" data-fa-transform="shrink-3"></i></button></div></div>
+
+            <div id="desc"><br/>Paste/type the link to the YouTube video in the "Video URL" input box and press Go. Paste the correctly formatted playlist into this page by pressing Ctrl + V. Website design coming soon. Example of a correctly formatted playlist:<br/><br/>0:00 idealism - dont say a word<br/>
+            2:22 through & through - mom.<br/>
+            4:52 Aso - Lucid Dreams<br/>
+            7:37 fujitsu - too far gone<br/>
+            9:21 Arbour - elusive<br/></div></div>
         </div>
         <script>
             var loadedlist = false;
 
+            var currenttrack = 0;
+
             const player = new Plyr('#player', {
                 autoplay: false
             });
+
+            // Quick element selector
+            function sl(s) {
+                return document.querySelector(s);
+            }
 
             deftitle = "MixTape";
 
@@ -73,11 +84,6 @@
                 function changedata(){
                     document.title = deftitle + " » " + player.embed.getVideoData().title;
                 };
-
-                // Quick element selector
-                function sl(s) {
-                    return document.querySelector(s);
-                }
 
                 // Get query string value (https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript)
                 function par(name, url) {
@@ -111,23 +117,38 @@
                     player.pause();
                 });
 
-                var play = true;
+                var play = true, seeking = false;
 
                 sl("#playpause").addEventListener("click", function(){
                     if(!loadedlist) return;
 
                     var icon = this.querySelector("i");
+                    console.log(icon);
 
-                    if(!play){
+                    if(!play && !seeking){
                          player.play();
-                         icon.className = "fas fa-pause";
+                         sl("#pauseicon").removeAttribute("hidden");
+                         sl("#playicon").setAttribute("hidden", true);
                     }
-                    else {
+                    else if(!seeking) {
                         player.pause();
-                        icon.className = "fas fa-play";
+                        sl("#playicon").removeAttribute("hidden");
+                        sl("#pauseicon").setAttribute("hidden", true);
                     }
 
                     play = play ? false: true;
+                });
+
+                player.on("seeking", function(){
+                    seeking = true;
+                    sl("#loadicon").removeAttribute("hidden");
+                    sl(play ? "#pauseicon": "#playicon").setAttribute("hidden", true);
+                });
+
+                player.on("seeked", function(){
+                    seeking = false;
+                    sl("#loadicon").setAttribute("hidden", true);
+                    sl(play ? "#pauseicon": "#playicon").removeAttribute("hidden");
                 });
 
                 var times = [],
@@ -139,6 +160,9 @@
                     tracks = [];
 
                     player.play();
+                    sl("#playicon").className = "fas fa-pause";
+                    console.log(sl("#playicon").className);
+                    play = true;
 
                     sl("#controls").className = "";
 
@@ -158,11 +182,13 @@
 
                         var timeval = s.match(/([0-9]+):([0-9]+)/)[0],
                             time = parseInt(timeval.split(':')[0] * 60) + (parseInt(timeval.split(':')[1])),
-                            track = s.replace(timeval + " ", '').replace('\n', '');
+                            track = s.replace(timeval + " ", '').replace('\n', '').trim();
 
                         console.log(time, track);
 
-                        sl("#tracklist").insertAdjacentHTML("beforeEnd", "<tr id='track" + item + "'><td>" + timeval + "</td><td>" + track + "</td></tr>");
+                        var trackDisplay = track.length > 26 ? track.substring(0, 26) + "...": track;
+
+                        sl("#tracklist").insertAdjacentHTML("beforeEnd", "<tr id='track" + item + "'><td>" + timeval + "</td><td>" + trackDisplay + "</td></tr>");
 
                         sl("#track0").className = "currenttrack";
 
@@ -172,17 +198,19 @@
                         tracks.push(track);
                         item++;
                     });
+
                     document.querySelectorAll("tr").forEach(function(e){
-                            e.addEventListener("click", function(){
+                        e.addEventListener("click", function(){
                             var selectedtrack = this.id.replace("track", '');
+                            console.log(selectedtrack);
                             player.currentTime = times[selectedtrack];
                             currenttrack = selectedtrack;
                             console.log(times[selectedtrack]);
                         });
                     });
+                    sl("#one").setAttribute("hidden", true);
+                    sl("#two").removeAttribute("hidden");
                 });
-
-                var currenttrack = 0;
 
                 player.on('timeupdate', function(){
                     if(player.currentTime == times[currenttrack + 1]) currenttrack++;
@@ -193,9 +221,20 @@
 
                 sl("#next").addEventListener("click", function(){
                     if(!loadedlist) return;
-                    player.currentTime = times[currenttrack + 1];
                     currenttrack++;
+                    player.currentTime = times[currenttrack];
                 });
+
+                sl("#prev").addEventListener("click", function(){
+                    if(!loadedlist) return;
+                    currenttrack--;
+                    player.currentTime = times[currenttrack];
+                });
+            });
+            var color = 1;
+            sl("#colorchange").addEventListener("click", function(){
+                document.body.className = color == 1 ? "dark": "";
+                color = color == 1 ? 0: 1;
             });
         </script>
     </body>
