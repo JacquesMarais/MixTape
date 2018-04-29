@@ -7,6 +7,10 @@ body {
     font-family: 'Open Sans', sans-serif;
 }
 
+body.dark {
+    background: #5a5a5a;
+}
+
 #wrapper {
     width: 30vw;
     position: absolute;
@@ -20,10 +24,19 @@ body {
     color: #777;
 }
 
-#controlwrapper {
+.dark #wrapper {
+    background: #464646;
+    color: #cecece;
+}
+
+#controlwrapper, #inputwrapper {
     background: #7c9e9e;
     position: relative;
     top: -1px;
+}
+
+.dark #controlwrapper, .dark #inputwrapper {
+    background: #5a5a5a;
 }
 
 .plyr__video-wrapper {
@@ -34,7 +47,11 @@ body {
     display: none !important;
 }
 .currenttrack {
-    color: #82a0a0;
+    color: #8fafaf;
+}
+
+.dark .currenttrack {
+    color: #f3f3f3;
 }
 
 #overlay {
@@ -62,16 +79,75 @@ button {
     display: none;
 }
 
-#controls {
+#controls, #inputs {
     background: #96BBBB;
     margin: 0 auto;
     text-align: center;
     height: 80px;
     vertical-align: middle;
     border-radius: 10px 10px 0 0;
+    line-height: 80px;
 }
 
-#controls > button {
+.dark #controls, .dark #inputs {
+    background: #3e3e3e;
+}
+
+input {
+    padding: 7px 25px;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    color: #555;
+}
+
+.dark input {
+    background: #f3f3f3;
+}
+
+::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+    color: #ccc;
+}
+::-moz-placeholder { /* Firefox 19+ */
+    color: #ccc;
+}
+:-ms-input-placeholder { /* IE 10+ */
+    color: #ccc;
+}
+:-moz-placeholder { /* Firefox 18- */
+    color: #ccc;
+}
+
+.dark ::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+    color: #aaa;
+}
+.dark ::-moz-placeholder { /* Firefox 19+ */
+    color: #aaa;
+}
+.dark :-ms-input-placeholder { /* IE 10+ */
+    color: #aaa;
+}
+.dark :-moz-placeholder { /* Firefox 18- */
+    color: #aaa;
+}
+
+#desc {
+    padding: 10px;
+}
+
+#vidgo {
+    background: #7c9e9e;
+    color: white;
+    line-height: normal;
+    padding: 8px 25px;
+    border-radius: 5px;
+}
+
+.dark #vidgo {
+    background: #2f2f2f;
+}
+
+#controls button {
     width: 80px;
     color: #fafafa;
     height: 80px;
@@ -80,9 +156,13 @@ button {
     font-size: 1em;
 }
 
-#controls > button:hover {
+#controls button:hover {
     font-size: 1.1em;
     background: #84a5a5;
+}
+
+.dark #controls button:hover {
+    background: #353535;
 }
 
 table {
@@ -93,6 +173,15 @@ tr {
     width: 100%;
     height: 30px;
     font-weight: 600;
+    cursor: pointer;
+}
+
+tr:hover {
+    color: #585858;
+}
+
+.dark tr:hover {
+    color: #f3f3f3;
 }
 
 tr > td:first-child {
@@ -117,6 +206,32 @@ tr > td:first-child {
     background: #737d7d !important;
 }
 
+.dark .simplebar-scrollbar::before {
+    background: #3d3d3d !important;
+    opacity: 0.8 !important;
+}
+
 .simplebar-track:hover .simplebar-scrollbar:before {
     opacity: 0.7 !important;
+}
+
+.dark .simplebar-track:hover .simplebar-scrollbar:before {
+    opacity: 1 !important;
+}
+
+#tools {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: #abd4d4;
+}
+
+.dark #tools {
+    color: #929292;
+}
+
+#tools span {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
 }
